@@ -2,11 +2,13 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const pinoHttp = require('pino-http');
+const { apiReference } = require('@scalar/express-api-reference');
 const logger = require('./config/logger');
 const connectDB = require('./config/database');
 const authRoutes = require('./routes/auth.routes');
 const todoRoutes = require('./routes/todo.routes');
 const errorHandler = require('./middleware/errorHandler');
+const openApiSpec = require('./config/openapi');
 
 const app = express();
 
@@ -45,6 +47,18 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// API Documentation
+app.use(
+  '/api/docs',
+  apiReference({
+    spec: {
+      content: openApiSpec,
+    },
+    theme: 'purple',
+    darkMode: true,
+  })
+);
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/todos', todoRoutes);
@@ -62,6 +76,7 @@ const PORT = process.env.PORT || 8081;
 app.listen(PORT, () => {
   logger.info(`🚀 Server running on port ${PORT}`);
   logger.info(`📍 Health check: http://localhost:${PORT}/health`);
+  logger.info(`📚 API Documentation: http://localhost:${PORT}/api/docs`);
 });
 
 module.exports = app;
